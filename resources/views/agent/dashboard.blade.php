@@ -39,12 +39,24 @@
 
                 <h6 class="mb-2">Your Public Form Link</h6>
                 <div class="input-group">
-                    <input type="text" class="form-control" readonly value="{{ route('public.form', ['ref' => auth()->id()]) }}">
+                    <input type="text" class="form-control" id="agentFormLink" readonly value="{{ route('public.form', ['ref' => auth()->id()]) }}">
+                    <button class="btn btn-primary" type="button" onclick="copyToClipboard()">
+                        <i class="fa fa-copy"></i> Copy
+                    </button>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+function copyToClipboard() {
+    const input = document.getElementById('agentFormLink');
+    input.select();
+    document.execCommand('copy');
+    alert('Link copied to clipboard!');
+}
+</script>
 @endsection
 
 

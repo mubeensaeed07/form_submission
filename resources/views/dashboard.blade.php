@@ -53,19 +53,24 @@
 
 <div class="card card-soft mt-3">
     <div class="card-body">
-        <h5 class="mb-0">Quick Links</h5>
-        <div class="mt-3 d-flex gap-2">
-            <a class="btn btn-primary" href="{{ route('form.show') }}">New Submission</a>
-            <a class="btn btn-outline-primary" href="{{ route('report') }}">View Report</a>
-        </div>
-
-        <hr class="my-4">
-        <h6 class="mb-2">Public Form Link</h6>
-        <p class="text-muted small mb-2">Share this URL with people so their submissions are tracked as sent by the admin.</p>
+        <h5 class="mb-0">Public Form Link</h5>
+        <p class="text-muted small mb-3 mt-2">Share this URL with people so their submissions are tracked as sent by the admin.</p>
         <div class="input-group">
-            <input type="text" class="form-control" readonly value="{{ route('public.form', ['ref' => auth()->id()]) }}">
+            <input type="text" class="form-control" id="publicFormLink" readonly value="{{ route('public.form', ['ref' => auth()->id()]) }}">
+            <button class="btn btn-primary" type="button" onclick="copyToClipboard()">
+                <i class="fa fa-copy"></i> Copy
+            </button>
         </div>
     </div>
 </div>
+
+<script>
+function copyToClipboard() {
+    const input = document.getElementById('publicFormLink');
+    input.select();
+    document.execCommand('copy');
+    alert('Link copied to clipboard!');
+}
+</script>
 @endsection
 

@@ -13,6 +13,9 @@
         @if(session('status'))
             <div class="alert alert-success py-2">{{ session('status') }}</div>
         @endif
+        @if(session('success'))
+            <div class="alert alert-success py-2">{{ session('success') }}</div>
+        @endif
 
         <div class="table-responsive">
             <table class="table table-striped align-middle">
@@ -74,6 +77,10 @@
                                             <button class="btn btn-outline-success btn-sm">Enable</button>
                                         </form>
                                     @endif
+
+                                    <a href="{{ route('admin.agents.password', $agent) }}" class="btn btn-outline-primary btn-sm">
+                                        <i class="fa fa-key"></i> Change Password
+                                    </a>
                                 </div>
                             </td>
                         </tr>

@@ -12,21 +12,29 @@
     <link rel="stylesheet" href="{{ asset('xhtml/assets/css/plugins.css') }}">
     <link rel="stylesheet" href="{{ asset('xhtml/assets/css/style.css') }}">
     <style>
-        /* Same protections as admin form to stop date picker opening on step change */
+        /* Prevent date picker from opening during navigation */
         body[data-navigating="true"] input[type="date"],
         body[data-step-changing="true"] input[type="date"] {
             pointer-events: none !important;
             opacity: 0.7;
         }
-
+        
+        /* Prevent date picker from opening when button is clicked */
         input[type="date"].no-picker {
             pointer-events: none !important;
         }
-
+        
+        /* Ensure buttons are always clickable */
         #nextStep, #prevStep {
             pointer-events: auto !important;
             z-index: 1000;
             position: relative;
+        }
+        
+        /* Additional Bootstrap override to prevent date picker */
+        input[type="date"]:disabled {
+            pointer-events: none !important;
+            cursor: not-allowed;
         }
     </style>
 </head>
@@ -252,30 +260,39 @@ document.addEventListener('DOMContentLoaded', () => {
     const form = document.getElementById('multiStepForm');
     let current = 0;
 
-    // Function to force close all date pickers (same logic as admin form)
+    // Function to force close all date pickers
     const closeAllDatePickers = () => {
         const dateInputs = document.querySelectorAll('input[type="date"]');
         dateInputs.forEach(input => {
+            // Add class to prevent picker
             input.classList.add('no-picker');
+            // Disable temporarily
             input.disabled = true;
+            // Force blur all date inputs
             input.blur();
+            // Remove focus
             if (document.activeElement === input) {
                 input.blur();
             }
+            // Re-enable after a short delay
             setTimeout(() => {
                 input.disabled = false;
                 input.classList.remove('no-picker');
             }, 500);
         });
+        // Also blur active element if it's a date input
         if (document.activeElement && document.activeElement.type === 'date') {
             document.activeElement.blur();
         }
     };
 
     const setStep = (index) => {
+        // Set flag to prevent date picker from opening during step change
         document.body.dataset.stepChanging = 'true';
+        
+        // Force close all date pickers
         closeAllDatePickers();
-
+        
         steps.forEach((step, i) => step.classList.toggle('d-none', i !== index));
         indicators.forEach((el, i) => {
             el.classList.remove('bg-primary', 'text-white', 'border');
@@ -288,7 +305,8 @@ document.addEventListener('DOMContentLoaded', () => {
         prevBtn.disabled = index === 0;
         nextBtn.classList.toggle('d-none', index === steps.length - 1);
         submitBtn.classList.toggle('d-none', index !== steps.length - 1);
-
+        
+        // Clear the flags after a delay to allow normal interaction
         setTimeout(() => {
             delete document.body.dataset.stepChanging;
             delete document.body.dataset.navigating;
@@ -306,7 +324,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input.classList.add('no-picker');
             input.blur();
         });
-
+        
         document.body.dataset.navigating = 'true';
         closeAllDatePickers();
 
@@ -336,7 +354,7 @@ document.addEventListener('DOMContentLoaded', () => {
             input.classList.add('no-picker');
             input.blur();
         });
-
+        
         document.body.dataset.navigating = 'true';
         closeAllDatePickers();
 

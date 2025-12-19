@@ -9,6 +9,7 @@ use App\Http\Controllers\PublicFormController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\FormSubmissionController;
 use App\Http\Controllers\ReportController;
+use App\Http\Controllers\PasswordController;
 use Illuminate\Support\Facades\Route;
 
 // Public multi-step form (accessible for both guests and logged-in users via link)
@@ -29,18 +30,19 @@ Route::middleware('auth')->group(function () {
             return redirect()->route('dashboard');
         }
         if ($user?->role === 'agent') {
-            return redirect()->route('agent.dashboard');
+            // Check if agent is active
+            if ($user->status === 'active') {
+                return redirect()->route('agent.dashboard');
+            }
+            // Non-active agents go to waiting page
+            return redirect()->route('agent.waiting');
         }
         abort(403);
     });
 
     // Admin routes
-    Route::middleware([])->group(function () {
+    Route::middleware([\App\Http\Middleware\AdminMiddleware::class])->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
-
-        Route::get('/form-submission', [FormSubmissionController::class, 'create'])->name('form.show');
-        Route::post('/form-submission', [FormSubmissionController::class, 'store'])->name('form.store');
-        Route::get('/processing', [FormSubmissionController::class, 'processing'])->name('processing');
 
         Route::get('/report', [ReportController::class, 'index'])->name('report');
 
@@ -53,16 +55,23 @@ Route::middleware('auth')->group(function () {
         // Facebook Users management (admin sees all)
         Route::get('/admin/facebook-users', [FacebookUserController::class, 'index'])->name('facebook-users.index');
         Route::post('/admin/facebook-users', [FacebookUserController::class, 'store'])->name('facebook-users.store');
+        
+        // Password management
+        Route::get('/admin/agents/{agent}/password', [PasswordController::class, 'showChangeAgentPassword'])->name('admin.agents.password');
+        Route::post('/admin/agents/{agent}/password', [PasswordController::class, 'changeAgentPassword'])->name('admin.agents.password.update');
     });
-
-    // Agent routes
-    Route::get('/agent/dashboard', [AgentDashboardController::class, 'index'])->name('agent.dashboard');
-    Route::get('/agent/report', [AgentReportController::class, 'index'])->name('agent.report');
+    
+    // Agent routes (require active status)
+    Route::middleware([\App\Http\Middleware\AgentActiveMiddleware::class])->group(function () {
+        Route::get('/agent/dashboard', [AgentDashboardController::class, 'index'])->name('agent.dashboard');
+        Route::get('/agent/report', [AgentReportController::class, 'index'])->name('agent.report');
+        
+        // Facebook Users management (agents see only their own)
+        Route::get('/agent/facebook-users', [FacebookUserController::class, 'index'])->name('agent.facebook-users.index');
+        Route::post('/agent/facebook-users', [FacebookUserController::class, 'store'])->name('agent.facebook-users.store');
+    });
+    
     Route::get('/agent/waiting', [AgentDashboardController::class, 'waiting'])->name('agent.waiting');
-
-    // Facebook Users management (agents see only their own)
-    Route::get('/agent/facebook-users', [FacebookUserController::class, 'index'])->name('agent.facebook-users.index');
-    Route::post('/agent/facebook-users', [FacebookUserController::class, 'store'])->name('agent.facebook-users.store');
 
     Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 });

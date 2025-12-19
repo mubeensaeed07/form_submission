@@ -7,7 +7,6 @@
     <div class="card-body">
         <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
             <h5 class="mb-0">Submissions Report</h5>
-            <a href="{{ route('form.show') }}" class="btn btn-primary btn-sm">New Submission</a>
         </div>
 
         <form class="row g-3 mb-3" method="GET" action="{{ route('report') }}">

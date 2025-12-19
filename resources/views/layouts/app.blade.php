@@ -66,11 +66,6 @@
                         <i class="flaticon-381-networking"></i><span class="nav-text">Dashboard</span>
                     </a>
                 </li>
-                <li class="{{ request()->routeIs('form.*') ? 'mm-active' : '' }}">
-                    <a href="{{ route('form.show') }}" class="ai-icon" aria-label="Form Submission">
-                        <i class="flaticon-381-edit"></i><span class="nav-text">Form Submission</span>
-                    </a>
-                </li>
                 <li class="{{ request()->routeIs('report') ? 'mm-active' : '' }}">
                     <a href="{{ route('report') }}" class="ai-icon" aria-label="Report">
                         <i class="flaticon-381-list"></i><span class="nav-text">Report</span>
