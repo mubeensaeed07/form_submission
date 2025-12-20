@@ -46,8 +46,10 @@
                         <th>Assistance Amount</th>
                         <th>Types</th>
                         <th>Submitted</th>
-                        <th>Facebook User</th>
+                        <th>Customer</th>
                         <th>Location</th>
+                        <th>Status</th>
+                        <th>Actions</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -77,10 +79,24 @@
                                 @endif
                             </td>
                             <td>{{ $submission->city }} {{ $submission->state }}</td>
+                            <td>
+                                @if($submission->status === 'approved')
+                                    <span class="badge bg-success">Approved</span>
+                                @elseif($submission->status === 'incorrect')
+                                    <span class="badge bg-danger">Incorrect</span>
+                                @else
+                                    <span class="badge bg-warning">Pending</span>
+                                @endif
+                            </td>
+                            <td>
+                                <a href="{{ route('agent.submissions.show', $submission) }}" class="btn btn-sm btn-outline-primary" title="View Details">
+                                    <i class="fa fa-eye"></i>
+                                </a>
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">No submissions found.</td>
+                            <td colspan="10" class="text-center text-muted py-4">No submissions found.</td>
                         </tr>
                     @endforelse
                 </tbody>

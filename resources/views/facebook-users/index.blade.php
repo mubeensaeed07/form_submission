@@ -4,15 +4,15 @@
 
 @extends(auth()->user()->role === 'admin' ? 'layouts.app' : 'layouts.agent')
 
-@section('title', 'Facebook Users')
+@section('title', 'Customers')
 
 @section('content')
 <div class="card card-soft">
     <div class="card-body">
         <div class="d-flex justify-content-between flex-wrap gap-2 mb-3">
-            <h5 class="mb-0">Facebook Users</h5>
+            <h5 class="mb-0">Customers</h5>
             <button type="button" class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#addFacebookUserModal">
-                <i class="fa fa-plus"></i> Add Facebook User
+                <i class="fa fa-plus"></i> Add Customer
             </button>
         </div>
 
@@ -73,7 +73,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="5" class="text-center text-muted py-4">No Facebook users found.</td>
+                            <td colspan="5" class="text-center text-muted py-4">No customers found.</td>
                         </tr>
                     @endforelse
                 </tbody>
@@ -91,7 +91,7 @@
     <div class="modal-dialog">
         <div class="modal-content">
             <div class="modal-header">
-                <h5 class="modal-title">Add Facebook User</h5>
+                <h5 class="modal-title">Add Customer</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
             </div>
             <form method="POST" action="{{ auth()->user()->role === 'admin' ? route('facebook-users.store') : route('agent.facebook-users.store') }}">

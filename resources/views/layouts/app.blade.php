@@ -77,8 +77,8 @@
                     </a>
                 </li>
                 <li class="{{ request()->routeIs('facebook-users.*') ? 'mm-active' : '' }}">
-                    <a href="{{ route('facebook-users.index') }}" class="ai-icon" aria-label="Facebook Users">
-                        <i class="fa fa-facebook"></i><span class="nav-text">Facebook Users</span>
+                    <a href="{{ route('facebook-users.index') }}" class="ai-icon" aria-label="Customers">
+                        <i class="fa fa-facebook"></i><span class="nav-text">Customers</span>
                     </a>
                 </li>
             </ul>

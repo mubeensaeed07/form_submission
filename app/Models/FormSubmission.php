@@ -33,6 +33,10 @@ class FormSubmission extends Model
         'submitted_by_id',
         'submitted_by_role',
         'facebook_user_id',
+        'status',
+        'approved_url',
+        'approved_by_id',
+        'approved_at',
     ];
 
     protected $casts = [
@@ -40,6 +44,7 @@ class FormSubmission extends Model
         'family_members' => 'array',
         'assistance_types' => 'array',
         'consent' => 'boolean',
+        'approved_at' => 'datetime',
     ];
 
     public function submittedBy()
@@ -50,6 +55,11 @@ class FormSubmission extends Model
     public function facebookUser()
     {
         return $this->belongsTo(FacebookUser::class);
+    }
+
+    public function approvedBy()
+    {
+        return $this->belongsTo(User::class, 'approved_by_id');
     }
 }
 

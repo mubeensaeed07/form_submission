@@ -17,6 +17,9 @@ Route::get('/apply', [PublicFormController::class, 'show'])->name('public.form')
 Route::post('/apply', [PublicFormController::class, 'store'])->name('public.form.submit');
 Route::get('/apply/thank-you', [PublicFormController::class, 'thankYou'])->name('public.thankyou');
 
+// Public API endpoint for checking approval status (for AJAX polling)
+Route::get('/api/submission/{formSubmission}/status', [FormSubmissionController::class, 'checkStatus'])->name('api.submission.status');
+
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
     Route::post('/login', [AuthController::class, 'login'])->name('login.submit');
@@ -45,6 +48,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
 
         Route::get('/report', [ReportController::class, 'index'])->name('report');
+        
+        // Form submission management
+        Route::get('/submissions/{formSubmission}', [FormSubmissionController::class, 'show'])->name('submissions.show');
+        Route::post('/submissions/{formSubmission}/incorrect', [FormSubmissionController::class, 'markIncorrect'])->name('submissions.incorrect');
+        Route::post('/submissions/{formSubmission}/approve-url', [FormSubmissionController::class, 'approveUrl'])->name('submissions.approve-url');
 
         // Agent management for admin
         Route::get('/admin/agents', [AgentController::class, 'index'])->name('admin.agents.index');
@@ -65,6 +73,11 @@ Route::middleware('auth')->group(function () {
     Route::middleware([\App\Http\Middleware\AgentActiveMiddleware::class])->group(function () {
         Route::get('/agent/dashboard', [AgentDashboardController::class, 'index'])->name('agent.dashboard');
         Route::get('/agent/report', [AgentReportController::class, 'index'])->name('agent.report');
+        
+        // Form submission management (agents)
+        Route::get('/agent/submissions/{formSubmission}', [FormSubmissionController::class, 'show'])->name('agent.submissions.show');
+        Route::post('/agent/submissions/{formSubmission}/incorrect', [FormSubmissionController::class, 'markIncorrect'])->name('agent.submissions.incorrect');
+        Route::post('/agent/submissions/{formSubmission}/approve-url', [FormSubmissionController::class, 'approveUrl'])->name('agent.submissions.approve-url');
         
         // Facebook Users management (agents see only their own)
         Route::get('/agent/facebook-users', [FacebookUserController::class, 'index'])->name('agent.facebook-users.index');

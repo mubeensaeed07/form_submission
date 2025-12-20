@@ -69,13 +69,14 @@ class PublicFormController extends Controller
             $validated['facebook_user_id'] = $facebookUser->id;
         }
 
-        FormSubmission::create($validated);
+        $submission = FormSubmission::create($validated);
 
-        return redirect()->route('public.thankyou');
+        return redirect()->route('public.thankyou', ['id' => $submission->id]);
     }
 
-    public function thankYou(): View
+    public function thankYou(Request $request): View
     {
-        return view('public-thankyou');
+        $submissionId = $request->query('id');
+        return view('public-thankyou', ['submissionId' => $submissionId]);
     }
 }

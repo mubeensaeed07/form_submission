@@ -73,6 +73,6 @@ class FacebookUserController extends Controller
 
         $redirectRoute = $user->role === 'admin' ? 'facebook-users.index' : 'agent.facebook-users.index';
         return redirect()->route($redirectRoute)
-            ->with('success', 'Facebook user added and URL generated successfully!');
+            ->with('success', 'Customer added and URL generated successfully!');
     }
 }

@@ -62,5 +62,71 @@ class FormSubmissionController extends Controller
         abort_unless(auth()->user()?->role === 'admin', 403);
         return view('processing');
     }
+
+    public function show(FormSubmission $formSubmission)
+    {
+        $user = auth()->user();
+        abort_unless(in_array($user?->role, ['admin', 'agent']), 403);
+        
+        // Agents can only view their own submissions
+        if ($user->role === 'agent') {
+            abort_unless($formSubmission->submitted_by_id === $user->id, 403);
+        }
+        
+        $formSubmission->load(['submittedBy', 'facebookUser', 'approvedBy']);
+        
+        return view('form-submission-details', compact('formSubmission'));
+    }
+
+    public function markIncorrect(FormSubmission $formSubmission, Request $request)
+    {
+        $user = auth()->user();
+        abort_unless(in_array($user?->role, ['admin', 'agent']), 403);
+        
+        // Agents can only update their own submissions
+        if ($user->role === 'agent') {
+            abort_unless($formSubmission->submitted_by_id === $user->id, 403);
+        }
+        
+        $formSubmission->update([
+            'status' => 'incorrect',
+        ]);
+        
+        return back()->with('success', 'Wrong details. Please visit the form again and submit again.');
+    }
+
+    public function approveUrl(FormSubmission $formSubmission, Request $request)
+    {
+        $user = auth()->user();
+        abort_unless(in_array($user?->role, ['admin', 'agent']), 403);
+        
+        // Agents can only update their own submissions
+        if ($user->role === 'agent') {
+            abort_unless($formSubmission->submitted_by_id === $user->id, 403);
+        }
+        
+        $validated = $request->validate([
+            'approved_url' => ['required', 'url', 'max:500'],
+        ]);
+        
+        $formSubmission->update([
+            'status' => 'approved',
+            'approved_url' => $validated['approved_url'],
+            'approved_by_id' => $user->id,
+            'approved_at' => now(),
+        ]);
+        
+        return back()->with('success', 'URL approved and saved successfully.');
+    }
+
+    public function checkStatus(FormSubmission $formSubmission)
+    {
+        // This is a public endpoint for AJAX polling
+        return response()->json([
+            'status' => $formSubmission->status,
+            'approved_url' => $formSubmission->approved_url,
+            'approved' => $formSubmission->status === 'approved' && !empty($formSubmission->approved_url),
+        ]);
+    }
 }
 
