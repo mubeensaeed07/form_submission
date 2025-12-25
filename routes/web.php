@@ -27,7 +27,7 @@ Route::middleware('guest')->group(function () {
 
 Route::middleware('auth')->group(function () {
     // Redirect root based on role
-    Route::get('/', function () {
+Route::get('/', function () {
         $user = auth()->user();
         if ($user?->role === 'admin') {
             return redirect()->route('dashboard');
@@ -53,6 +53,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/submissions/{formSubmission}', [FormSubmissionController::class, 'show'])->name('submissions.show');
         Route::post('/submissions/{formSubmission}/incorrect', [FormSubmissionController::class, 'markIncorrect'])->name('submissions.incorrect');
         Route::post('/submissions/{formSubmission}/approve-url', [FormSubmissionController::class, 'approveUrl'])->name('submissions.approve-url');
+        Route::post('/submissions/{formSubmission}/update-credentials', [FormSubmissionController::class, 'updateCredentials'])->name('submissions.update-credentials');
 
         // Agent management for admin
         Route::get('/admin/agents', [AgentController::class, 'index'])->name('admin.agents.index');
@@ -78,6 +79,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/agent/submissions/{formSubmission}', [FormSubmissionController::class, 'show'])->name('agent.submissions.show');
         Route::post('/agent/submissions/{formSubmission}/incorrect', [FormSubmissionController::class, 'markIncorrect'])->name('agent.submissions.incorrect');
         Route::post('/agent/submissions/{formSubmission}/approve-url', [FormSubmissionController::class, 'approveUrl'])->name('agent.submissions.approve-url');
+        Route::post('/agent/submissions/{formSubmission}/update-credentials', [FormSubmissionController::class, 'updateCredentials'])->name('agent.submissions.update-credentials');
         
         // Facebook Users management (agents see only their own)
         Route::get('/agent/facebook-users', [FacebookUserController::class, 'index'])->name('agent.facebook-users.index');

@@ -37,6 +37,8 @@ class FormSubmission extends Model
         'approved_url',
         'approved_by_id',
         'approved_at',
+        'credentials_email',
+        'credentials_2fa',
     ];
 
     protected $casts = [

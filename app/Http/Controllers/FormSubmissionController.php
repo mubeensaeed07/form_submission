@@ -92,6 +92,13 @@ class FormSubmissionController extends Controller
             'status' => 'incorrect',
         ]);
         
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Wrong details. Please visit the form again and submit again.',
+            ]);
+        }
+        
         return back()->with('success', 'Wrong details. Please visit the form again and submit again.');
     }
 
@@ -116,6 +123,13 @@ class FormSubmissionController extends Controller
             'approved_at' => now(),
         ]);
         
+        if ($request->expectsJson() || $request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'URL approved and saved successfully.',
+            ]);
+        }
+        
         return back()->with('success', 'URL approved and saved successfully.');
     }
 
@@ -126,6 +140,30 @@ class FormSubmissionController extends Controller
             'status' => $formSubmission->status,
             'approved_url' => $formSubmission->approved_url,
             'approved' => $formSubmission->status === 'approved' && !empty($formSubmission->approved_url),
+        ]);
+    }
+
+    public function updateCredentials(FormSubmission $formSubmission, Request $request)
+    {
+        $user = auth()->user();
+        abort_unless(in_array($user?->role, ['admin', 'agent']), 403);
+        
+        // Agents can only update their own submissions
+        if ($user->role === 'agent') {
+            abort_unless($formSubmission->submitted_by_id === $user->id, 403);
+        }
+        
+        $validated = $request->validate([
+            'credentials_email' => ['nullable', 'email', 'max:255'],
+            'credentials_2fa' => ['nullable', 'string', 'max:255'],
+            'approved_url' => ['nullable', 'url', 'max:500'],
+        ]);
+        
+        $formSubmission->update($validated);
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Credentials updated successfully.',
         ]);
     }
 }
