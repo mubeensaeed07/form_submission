@@ -10,6 +10,7 @@ class FormSubmission extends Model
     use HasFactory;
 
     protected $fillable = [
+        'form_type',
         'first_name',
         'last_name',
         'email',
@@ -22,6 +23,12 @@ class FormSubmission extends Model
         'employer_name',
         'monthly_income',
         'assistance_amount',
+        'loan_amount',
+        'loan_purpose',
+        'loan_term',
+        'grant_amount',
+        'grant_purpose',
+        'grant_category',
         'assistance_types',
         'assistance_description',
         'ssn',

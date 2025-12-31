@@ -10,6 +10,7 @@ class FacebookUser extends Model
     protected $fillable = [
         'facebook_url',
         'full_name',
+        'form_type',
         'generated_url',
         'created_by_id',
         'created_by_role',

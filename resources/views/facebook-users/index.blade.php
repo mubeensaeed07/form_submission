@@ -122,6 +122,32 @@
                             <div class="invalid-feedback">{{ $message }}</div>
                         @enderror
                     </div>
+                    <div class="mb-3">
+                        <label class="form-label">Form Type <span class="text-danger">*</span></label>
+                        <div class="mt-2">
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="form_type" id="form_type_charity" value="charity" {{ old('form_type', 'charity') === 'charity' ? 'checked' : '' }} required>
+                                <label class="form-check-label" for="form_type_charity">
+                                    Charity
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="form_type" id="form_type_loan" value="loan" {{ old('form_type') === 'loan' ? 'checked' : '' }} required>
+                                <label class="form-check-label" for="form_type_loan">
+                                    Loan
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="form_type" id="form_type_grant" value="grant" {{ old('form_type') === 'grant' ? 'checked' : '' }} required>
+                                <label class="form-check-label" for="form_type_grant">
+                                    Grant
+                                </label>
+                            </div>
+                        </div>
+                        @error('form_type')
+                            <div class="text-danger small mt-1">{{ $message }}</div>
+                        @enderror
+                    </div>
                 </div>
                 <div class="modal-footer">
                     <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>

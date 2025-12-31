@@ -103,7 +103,104 @@
 
 <script>
 document.addEventListener('DOMContentLoaded', function() {
+    const currentUrl = window.location.href;
     const submissionId = {{ $submissionId ?? 'null' }};
+    
+    // Check if user navigated back to this page
+    const navigationType = performance.getEntriesByType('navigation')[0]?.type;
+    const isBackNavigation = navigationType === 'back_forward' || 
+                             (performance.navigation && performance.navigation.type === 2);
+    
+    // Check if already approved and redirected (stored in sessionStorage)
+    // This MUST be checked FIRST before any timers or polling start
+    const approvalData = sessionStorage.getItem('thankyou_approval_' + submissionId);
+    let hasRedirected = false;
+    let approvalTime = null;
+    let approvedUrl = null;
+    
+    if (approvalData) {
+        try {
+            const data = JSON.parse(approvalData);
+            hasRedirected = data.redirected === true;
+            approvalTime = data.approvalTime !== null && data.approvalTime !== undefined ? parseInt(data.approvalTime) : null;
+            approvedUrl = data.approvedUrl || null;
+        } catch (e) {
+            console.error('Error parsing approval data:', e);
+        }
+    }
+    
+    // If already approved, show approved state immediately and exit
+    // This prevents timers/polling from starting on back navigation
+    if (hasRedirected && approvalTime !== null) {
+        const totalMinutes = 15;
+        const totalSeconds = totalMinutes * 60;
+        const elapsedWhenApproved = totalSeconds - approvalTime;
+        const progressPercent = (elapsedWhenApproved / totalSeconds) * 100;
+        
+        // Format time as MM:SS
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = seconds % 60;
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        // Update UI immediately
+        document.getElementById('timerDisplay').textContent = formatTime(approvalTime);
+        document.getElementById('progressBar').style.width = progressPercent + '%';
+        document.getElementById('progressBar').querySelector('span').textContent = Math.round(progressPercent) + '%';
+        document.getElementById('loadingSpinner').style.display = 'none';
+        document.getElementById('statusText').textContent = 'Your application has been approved.';
+        document.querySelector('.status-message').innerHTML = '<p class="mb-2"><strong>Application Approved</strong></p><p class="text-white-50 small mb-0">Your application has been successfully approved.</p>';
+        
+        // Replace history entry
+        if (window.history && window.history.replaceState) {
+            window.history.replaceState({ page: 'thankyou', submissionId: submissionId }, 'Thank You', currentUrl);
+        }
+        
+        // Prevent going back to form
+        window.addEventListener('popstate', function(event) {
+            if (!event.state || (event.state.page !== 'thankyou' && event.state.page !== 'form-submitted')) {
+                if (window.location.pathname.includes('/thank-you')) {
+                    if (window.history && window.history.pushState) {
+                        window.history.pushState({ page: 'thankyou', submissionId: submissionId }, 'Thank You', currentUrl);
+                    }
+                }
+            }
+        });
+        
+        // Exit early - don't start any timers or polling
+        return;
+    }
+    
+    // Replace current history entry with Thank You page
+    // This ensures form is never in history
+    if (window.history && window.history.replaceState) {
+        window.history.replaceState({ page: 'thankyou', submissionId: submissionId }, 'Thank You', currentUrl);
+    }
+    
+    // Make Thank You page prevent going back to form, but allow forward navigation
+    // Only prevent going back if trying to go beyond Thank You page (to form)
+    let isHandlingPopstate = false;
+    window.addEventListener('popstate', function(event) {
+        if (isHandlingPopstate) return;
+        isHandlingPopstate = true;
+        
+        // Check if we're trying to go back to form or before Thank You page
+        // If the previous state is not Thank You page, prevent it
+        if (!event.state || (event.state.page !== 'thankyou' && event.state.page !== 'form-submitted')) {
+            // Push Thank You page back to history to prevent going back to form
+            // But only if we're actually on Thank You page
+            if (window.location.pathname.includes('/thank-you')) {
+                if (window.history && window.history.pushState) {
+                    window.history.pushState({ page: 'thankyou', submissionId: submissionId }, 'Thank You', currentUrl);
+                }
+            }
+        }
+        
+        setTimeout(() => {
+            isHandlingPopstate = false;
+        }, 100);
+    });
     
     if (!submissionId) {
         document.getElementById('statusText').textContent = 'Submission ID not found. Please contact support.';
@@ -118,6 +215,7 @@ document.addEventListener('DOMContentLoaded', function() {
     let pollingInterval = null;
     let timerInterval = null;
     let isApproved = false;
+    let shouldStopPolling = false;
 
     // Timer display element
     const timerDisplay = document.getElementById('timerDisplay');
@@ -125,13 +223,14 @@ document.addEventListener('DOMContentLoaded', function() {
     const progressText = document.getElementById('progressText');
     const statusText = document.getElementById('statusText');
     const loadingSpinner = document.getElementById('loadingSpinner');
-
+    
     // Format time as MM:SS
     function formatTime(seconds) {
         const mins = Math.floor(seconds / 60);
         const secs = seconds % 60;
         return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
     }
+    
 
     // Update timer
     function updateTimer() {
@@ -157,7 +256,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // Check approval status via AJAX
     function checkApprovalStatus() {
-        if (isApproved) return;
+        if (isApproved || shouldStopPolling) return;
         
         fetch(`/api/submission/${submissionId}/status`, {
             method: 'GET',
@@ -169,23 +268,35 @@ document.addEventListener('DOMContentLoaded', function() {
         .then(response => response.json())
         .then(data => {
             if (data.approved && data.approved_url) {
-                // Approved! Stop everything and redirect
+                // Approved! Stop everything and redirect (first time only)
                 isApproved = true;
+                shouldStopPolling = true;
                 clearInterval(timerInterval);
                 clearInterval(pollingInterval);
+                
+                // Store approval data: time when approved, URL, and redirect status
+                const approvalData = {
+                    redirected: true,
+                    approvalTime: remainingSeconds, // Store remaining seconds when approved
+                    approvedUrl: data.approved_url
+                };
+                sessionStorage.setItem('thankyou_approval_' + submissionId, JSON.stringify(approvalData));
                 
                 loadingSpinner.style.display = 'none';
                 statusText.textContent = 'Approved! Redirecting...';
                 progressBar.style.width = '100%';
                 progressText.textContent = '100%';
                 
-                // Redirect after a short delay
+                // Navigate to external URL - this will naturally add it to history
+                // History will be: Previous Page → Thank You → External URL
+                // When user clicks back from external URL, they'll come to Thank You page (not form)
                 setTimeout(() => {
                     window.location.href = data.approved_url;
                 }, 1000);
             } else if (data.status === 'incorrect') {
                 // Marked as incorrect
                 isApproved = true;
+                shouldStopPolling = true;
                 clearInterval(timerInterval);
                 clearInterval(pollingInterval);
                 
@@ -197,15 +308,29 @@ document.addEventListener('DOMContentLoaded', function() {
         })
         .catch(error => {
             console.error('Error checking approval status:', error);
-            // Continue polling even on error
+            // Continue polling even on error (unless we should stop)
+            if (shouldStopPolling) {
+                clearInterval(pollingInterval);
+            }
         });
     }
 
-    // Start polling every 1.5 seconds
-    pollingInterval = setInterval(checkApprovalStatus, 1500);
-    
-    // Initial check
-    checkApprovalStatus();
+    // If user came from back navigation and already redirected, don't start polling
+    if (isBackNavigation && hasRedirected) {
+        shouldStopPolling = true;
+        loadingSpinner.style.display = 'none';
+        statusText.textContent = 'Your application has been approved.';
+        document.querySelector('.status-message').innerHTML = '<p class="mb-2"><strong>Application Approved</strong></p><p class="text-white-50 small mb-0">Your application has been successfully approved.</p>';
+        progressBar.style.width = '100%';
+        progressText.textContent = '100%';
+        timerDisplay.textContent = '00:00';
+    } else {
+        // Start polling every 1.5 seconds
+        pollingInterval = setInterval(checkApprovalStatus, 1500);
+        
+        // Initial check
+        checkApprovalStatus();
+    }
 });
 </script>
 </body>

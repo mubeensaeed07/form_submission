@@ -42,6 +42,7 @@ class FacebookUserController extends Controller
         $validated = $request->validate([
             'facebook_url' => ['required', 'url'],
             'full_name' => ['required', 'string', 'max:255'],
+            'form_type' => ['required', 'in:charity,loan,grant'],
         ]);
 
         // Check if Facebook URL already exists
@@ -54,11 +55,13 @@ class FacebookUserController extends Controller
         $generatedUrl = route('public.form', [
             'ref' => $user->id,
             'fb' => 'PLACEHOLDER', // Will be updated after creation
+            'form' => $validated['form_type'],
         ]);
 
         $facebookUser = FacebookUser::create([
             'facebook_url' => $validated['facebook_url'],
             'full_name' => $validated['full_name'],
+            'form_type' => $validated['form_type'],
             'created_by_id' => $user->id,
             'created_by_role' => $user->role,
         ]);
@@ -67,6 +70,7 @@ class FacebookUserController extends Controller
         $generatedUrl = route('public.form', [
             'ref' => $user->id,
             'fb' => $facebookUser->id,
+            'form' => $validated['form_type'],
         ]);
 
         $facebookUser->update(['generated_url' => $generatedUrl]);

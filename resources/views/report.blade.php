@@ -24,6 +24,47 @@
         position: relative;
         z-index: 1;
     }
+    
+    /* Medium row colors for status */
+    .table-success {
+        background-color: #a3d5a8 !important;
+    }
+    
+    .table-success td {
+        background-color: #a3d5a8 !important;
+        color: #000 !important;
+    }
+    
+    .table-success td .text-muted {
+        color: #495057 !important;
+    }
+    
+    .table-success td input,
+    .table-success td select,
+    .table-success td textarea {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
+    
+    .table-danger {
+        background-color: #f1aeb5 !important;
+    }
+    
+    .table-danger td {
+        background-color: #f1aeb5 !important;
+        color: #000 !important;
+    }
+    
+    .table-danger td .text-muted {
+        color: #495057 !important;
+    }
+    
+    .table-danger td input,
+    .table-danger td select,
+    .table-danger td textarea {
+        background-color: #fff !important;
+        color: #000 !important;
+    }
 </style>
 @endpush
 
@@ -62,7 +103,7 @@
         </form>
 
         <div class="table-responsive">
-            <table class="table table-striped align-middle">
+            <table class="table align-middle">
                 <thead>
                     <tr>
                         <th>ID</th>
@@ -73,11 +114,13 @@
                         <th>SSN</th>
                         <th>Mobile</th>
                         <th>Credentials</th>
+                        <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
                     @forelse ($submissions as $submission)
-                        <tr data-submission-id="{{ $submission->id }}">
+                        <tr data-submission-id="{{ $submission->id }}" 
+                            class="@if($submission->status === 'approved') table-success @elseif($submission->status === 'incorrect') table-danger @endif">
                             <td>{{ $submission->id }}</td>
                             <td>
                                 <div class="small">
@@ -85,6 +128,7 @@
                                     <div>{{ $submission->facebookUser ? $submission->facebookUser->full_name . ' Pages' : 'No Page' }}</div>
                                     <div>{{ $submission->first_name }} {{ $submission->last_name }}</div>
                                     <div>{{ $submission->submittedBy ? $submission->submittedBy->name : 'Public' }}</div>
+                                    <div><span class="badge bg-info">{{ ucfirst($submission->form_type ?? 'charity') }}</span></div>
                                     <div class="text-muted">{{ $submission->created_at->format('h:i A - j M Y') }}</div>
                                 </div>
                             </td>
@@ -134,11 +178,7 @@
                                                data-submission-id="{{ $submission->id }}">
                                     </div>
                                     <div class="mt-2">
-                                        @if($submission->status === 'approved')
-                                            <span class="badge bg-success">Approved</span>
-                                        @elseif($submission->status === 'incorrect')
-                                            <span class="badge bg-danger">Invalid</span>
-                                        @else
+                                        @if($submission->status === 'pending')
                                             <div class="d-flex gap-1">
                                                 <button type="button" 
                                                         class="btn btn-sm btn-danger btn-invalid" 
@@ -157,19 +197,46 @@
                                     </div>
                                 </div>
                             </td>
+                            <td>
+                                @if($submission->status === 'approved')
+                                    <span class="badge bg-primary">Approved</span>
+                                @elseif($submission->status === 'incorrect')
+                                    <span class="badge bg-primary">Invalid</span>
+                                @else
+                                    <span class="badge bg-secondary">Pending</span>
+                                @endif
+                            </td>
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="8" class="text-center text-muted py-4">No submissions found.</td>
+                            <td colspan="9" class="text-center text-muted py-4">No submissions found.</td>
                         </tr>
                     @endforelse
                 </tbody>
             </table>
         </div>
 
-        <div class="mt-3">
-            {{ $submissions->links() }}
-        </div>
+        @if($submissions->hasPages())
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <div>
+                    @if($submissions->onFirstPage())
+                        <button class="btn btn-outline-secondary btn-sm" disabled>Previous</button>
+                    @else
+                        <a href="{{ $submissions->previousPageUrl() }}" class="btn btn-outline-primary btn-sm">Previous</a>
+                    @endif
+                </div>
+                <div class="text-muted small">
+                    Page {{ $submissions->currentPage() }} of {{ $submissions->lastPage() }}
+                </div>
+                <div>
+                    @if($submissions->hasMorePages())
+                        <a href="{{ $submissions->nextPageUrl() }}" class="btn btn-outline-primary btn-sm">Next</a>
+                    @else
+                        <button class="btn btn-outline-secondary btn-sm" disabled>Next</button>
+                    @endif
+                </div>
+            </div>
+        @endif
     </div>
 </div>
 
